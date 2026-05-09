@@ -121,6 +121,7 @@ const KnowYourRights = () => {
   const isListeningRef = useRef(false);
   const [speechSupported, setSpeechSupported] = useState(false);
   const chatEndRef = useRef(null);
+  const EXPRESS_API_URL = import.meta.env.VITE_EXPRESS_API_URL || "http://localhost:5000";
   const hasProcessedResults = useRef(false);
 
   // Load messages from localStorage on mount
@@ -291,7 +292,7 @@ const KnowYourRights = () => {
       return [...currentMessages, userMessage];
     });
     try {
-      const response = await fetch("http://localhost:5000/chat", {
+      const response = await fetch(`${EXPRESS_API_URL}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: conversation }),

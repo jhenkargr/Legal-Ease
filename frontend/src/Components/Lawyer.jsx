@@ -6,6 +6,7 @@ import {
   ShieldCheck, Star, Phone, Clock, Mail, Link
 } from 'lucide-react';
 
+
 // Define the custom gold and blue colors for consistency
 const primaryGold = 'text-yellow-600';
 const buttonGold = 'bg-yellow-600 hover:bg-yellow-700';
@@ -28,6 +29,8 @@ const FindLawyers = () => {
   // State to hold search results (can be filtered later)
   const [lawyerResults, setLawyerResults] = useState([]);
 
+   const EXPRESS_API_URL = import.meta.env.VITE_EXPRESS_API_URL || "http://localhost:5000";
+
   // Handler for the main search button
   const handleSearch = () => {
     const params = new URLSearchParams();
@@ -41,7 +44,7 @@ if (cityState && cityState !== "e.g., New York, NY")
 if (language && language !== "Any Language")
   params.append("language", language);
 
-fetch(`http://localhost:5000/lawyer/lawyers?${params.toString()}`)
+fetch(`${EXPRESS_API_URL}/lawyer/lawyers?${params.toString()}`)
   .then((res) => res.json())
   .then((data) => {
     if (!Array.isArray(data)) return;

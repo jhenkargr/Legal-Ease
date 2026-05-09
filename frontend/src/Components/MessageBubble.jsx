@@ -79,8 +79,9 @@ const KnowYourRights = () => {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const chatEndRef = useRef(null);
-  const API_URL = "http://localhost:3000/api/ask-gemini"; 
+    const chatEndRef = useRef(null);
+    const GEMINI_API_URL = import.meta.env.VITE_GEMINI_API_URL || "http://localhost:3000";
+    const API_URL = `${GEMINI_API_URL}/api/ask-gemini`; 
 
   // Language Selector Options
   const languageOptions = [

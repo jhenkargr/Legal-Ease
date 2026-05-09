@@ -17,6 +17,7 @@ import Tesseract from "tesseract.js";
 import ReactMarkdown from "react-markdown";
 import { useNavigate } from "react-router-dom";
 
+
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 const DocumentSimple = () => {
@@ -36,6 +37,9 @@ const DocumentSimple = () => {
   const [interimText, setInterimText] = useState("");
   const [finalText, setFinalText] = useState("");
   const [isRecognitionSupported, setIsRecognitionSupported] = useState(true);
+
+  const EXPRESS_API_URL = import.meta.env.VITE_EXPRESS_API_URL || "http://localhost:5000";
+  const FAST_API_URL = import.meta.env.VITE_FAST_API_URL || "http://localhost:8000";
 
   const navigate = useNavigate();
 
@@ -188,7 +192,7 @@ const DocumentSimple = () => {
   // Send text to backend
   const sendToBackend = async (data1) => {
     try {
-      const response = await fetch("http://localhost:5000/simplifier", {
+      const response = await fetch(`${EXPRESS_API_URL}/simplifier`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: `${data1}` }),
@@ -211,7 +215,7 @@ const DocumentSimple = () => {
     setResults1(null);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/query", {
+      const response = await fetch(`${FAST_API_URL}/query`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -273,7 +277,7 @@ Clause ${idx + 1}:
 Remember: Return ONLY valid JSON. Translate the "summary", "title", and "detail" fields. Keep "status" and "alert" values unchanged.
 `;
 
-      const response = await fetch("http://localhost:5000/translator", {
+      const response = await fetch(`${EXPRESS_API_URL}/translator`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: translationPrompt }),
