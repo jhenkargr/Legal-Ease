@@ -1,89 +1,158 @@
-# LegalEase
+<div align="center">
 
-LegalEase is a full-stack legal assistant built as a three-part system:
+<!-- Replace the banner below with your actual banner image -->
+<!-- Recommended: 1280×640px, dark background with the LegalEase logo -->
 
-- A React frontend for chat, document simplification, lawyer search, and legal document templates.
-- An Express backend that connects the frontend to AI services, a MySQL lawyer database, and external models.
-- A FastAPI service that performs document ingestion and retrieval-augmented question answering over uploaded PDFs.
 
-The goal of the project is to make legal information easier to access, understand, and act on.
+# ⚖️ LegalEase
 
-## What the project does
+**Understand your rights. Simplify complex laws. Find the right lawyer.**
 
-LegalEase gives users four main experiences:
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://reactjs.org/)
+[![Express](https://img.shields.io/badge/Express-Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://expressjs.com/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Python-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Cohere](https://img.shields.io/badge/Cohere-AI-FF6F61?style=for-the-badge)](https://cohere.com/)
+[![MySQL](https://img.shields.io/badge/MySQL-Database-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://mysql.com/)
+[![FAISS](https://img.shields.io/badge/FAISS-Vector_Search-blue?style=for-the-badge)](https://github.com/facebookresearch/faiss)
 
-1. Ask legal questions in a chat-style interface.
-2. Upload a legal document and get a plain-English summary with key clauses and translations.
-3. Find lawyers by specialization, city, and language.
-4. Generate legal document templates with live PDF previews and export support.
+[🚀 Get Started](#-getting-started) · [✨ Features](#-features) · [🏗️ Architecture](#️-architecture) · [📸 Screenshots](#-screenshots) · [🗺️ Roadmap](#️-roadmap)
 
-## How it works
+</div>
 
-The application is split into independent services so each responsibility stays focused:
+---
 
-- The frontend gathers user input, handles local document parsing and voice input, and renders the user interface.
-- The Express backend exposes routes for chat, simplification, translation, and lawyer search.
-- The FastAPI service indexes uploaded documents into FAISS and answers questions by retrieving relevant chunks before sending the final prompt to Cohere.
+## 🧭 What is LegalEase?
 
-Typical request flow:
+LegalEase is a full-stack AI-powered legal assistant that bridges the gap between complex legal jargon and everyday understanding. Whether you're reviewing a contract, looking for a lawyer, or just want to know your rights — LegalEase has you covered.
 
-- The user opens the site in the browser.
-- The React app routes them to the desired tool.
-- The frontend sends requests to the backend or FastAPI service using the configured base URLs.
-- The backend returns structured AI output or database results.
-- The frontend formats and displays the response, often with markdown rendering or PDF previewing.
+> ⚠️ **Disclaimer:** LegalEase is designed to help users *understand* legal information, not to replace a licensed attorney. Always consult a qualified legal professional for advice specific to your situation.
 
-## Project Structure
+---
 
-```text
-backend/
-  server.js
-  routes/
-    chat.js
-    lawyer.js
-    simplifier.js
-    translator.js
-fastapi/
-  Scripts/
-    main.py
-    requirements.txt
-frontend/
-  src/
-    App.jsx
-    Components/
-    Templates/
+![LegalEase Banner](frontend\screenshots\home.png)
+
+## ✨ Features
+
+<table>
+<tr>
+<td width="50%">
+
+### 💬 Know Your Rights
+Ask legal questions in a natural chat interface powered by Cohere AI. Get clear, markdown-formatted guidance on any legal topic.
+
+<!-- Add a screenshot: frontend/screenshots/chat.png -->
+![Chat Interface](frontend\screenshots\chat.png)
+
+</td>
+<td width="50%">
+
+### 📄 Simplify Legal Docs
+Upload a PDF or image of any legal document. LegalEase extracts, summarizes, and translates it into plain English — with key clauses highlighted.
+
+<!-- Add a screenshot: frontend/screenshots/simplify.png -->
+![Doc Simplifier](frontend\screenshots\simplify.png)
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+### 🗂️ Legal Document Templates
+Fill out form-based legal templates and see a live PDF preview update in real time. Export when ready.
+
+<!-- Add a screenshot: frontend/screenshots/templates.png -->
+![Templates](frontend\screenshots\template.png)
+
+</td>
+<td width="50%">
+
+### 🔍 Find a Lawyer
+Search a curated lawyer directory filtered by specialization, city, and language spoken.
+
+<!-- Add a screenshot: frontend/screenshots/lawyers.png -->
+![Find Lawyers](frontend\screenshots\lawyer.png)
+
+</td>
+</tr>
+</table>
+
+---
+
+## 🏗️ Architecture
+
+LegalEase is split into three independent services:
+
 ```
 
-## Frontend pages
+┌─────────────────────────────────────────────────────────────┐
+│                        Browser                              │
+│                    React Frontend (Vite)                    │
+│         Chat · Simplify · Templates · Find Lawyers          │
+└──────────────┬──────────────────────┬───────────────────────┘
+               │                      │
+               ▼                      ▼
+┌──────────────────────┐  ┌──────────────────────────────────┐
+│   Express Backend    │  │         FastAPI Service          │
+│  /chat  /simplifier  │  │  /upload  →  FAISS Index         │
+│  /translator /lawyer │  │  /query   →  RAG + Cohere        │
+└──────────┬───────────┘  └──────────────────────────────────┘
+           │
+           ▼
+┌──────────────────────┐
+│   MySQL Database     │
+│   Lawyer Directory   |
+|   API calls          |
+└──────────────────────┘
 
-- Home: introduces the product and its legal tools.
-- Know Your Rights: a chat interface for legal guidance powered by the backend chat route.
-- Simplify Docs: uploads PDFs or images, extracts text, summarizes legal content, translates the summary, and can query the document through the FastAPI service.
-- Templates: lets users fill out form-based legal templates and preview the generated PDF live.
-- Find Lawyers: searches a MySQL-backed lawyer directory with filters for specialization, city, and language.
+```
 
-## Backend routes
 
-- `POST /chat` sends the conversation to Cohere and returns a markdown-formatted legal response.
-- `POST /simplifier` sends legal text to NVIDIA’s model and returns a structured JSON summary with key clauses.
-- `POST /translator` translates the summary JSON while preserving the structure.
-- `GET /lawyer/lawyers` searches the lawyer directory with optional filters.
-- `GET /lawyer/:id` returns one lawyer record by ID.
+**Request flow:**
+1. User opens the React app and picks a tool.
+2. Frontend sends a request to the Express backend or FastAPI service.
+3. The backend calls Cohere / NVIDIA AI models and returns structured output.
+4. The frontend renders the response — markdown, PDF preview, or a lawyer card.
 
-## FastAPI service
+---
 
-The FastAPI app supports document retrieval workflows:
+## 📁 Project Structure
 
-- `POST /upload` saves a PDF, extracts text, chunks it, embeds the chunks with Cohere, and stores them in FAISS.
-- `POST /query` takes chat history or a question, retrieves the most relevant document chunks, and generates a grounded answer.
+```
+legalease/
+├── backend/
+│   ├── server.js
+│   └── routes/
+│       ├── chat.js
+│       ├── lawyer.js
+│       ├── simplifier.js
+│       └── translator.js
+│
+├── fastapi/
+│   └── Scripts/
+│       ├── main.py
+│       └── requirements.txt
+│
+└── frontend/
+    └── src/
+        ├── App.jsx
+        ├── Components/
+        └── Templates/
+```
 
-This makes the document assistant behave like a simple retrieval-augmented generation pipeline.
+---
 
-## Setup
+## 🚀 Getting Started
 
-### 1. Backend
+### Prerequisites
 
-Install dependencies and start the server:
+- Node.js ≥ 18
+- Python ≥ 3.9
+- MySQL instance running
+- API keys for Cohere and NVIDIA
+
+---
+
+### 1️⃣ Backend
 
 ```bash
 cd backend
@@ -91,23 +160,28 @@ npm install
 npm start
 ```
 
-Required backend environment variables:
+Create a `.env` file in `backend/`:
 
-- `PORT`
-- `CLIENT_URL`
-- `COHERE_API_KEY`
-- `COHERE_MODEL`
-- `NVIDIA_API_KEY`
-- `NVIDIA_MODEL`
-- `DB_HOST`
-- `DB_USER`
-- `DB_PASSWORD`
-- `DB_NAME`
-- `DB_PORT`
+```env
+PORT=5000
+CLIENT_URL=http://localhost:5173
 
-### 2. Frontend
+COHERE_API_KEY=your_cohere_key
+COHERE_MODEL=command-r-plus
 
-Install dependencies and run Vite:
+NVIDIA_API_KEY=your_nvidia_key
+NVIDIA_MODEL=your_nvidia_model
+
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=legalease
+DB_PORT=3306
+```
+
+---
+
+### 2️⃣ Frontend
 
 ```bash
 cd frontend
@@ -115,49 +189,107 @@ npm install
 npm run dev
 ```
 
-Useful frontend environment variables:
+Create a `.env` file in `frontend/`:
 
-- `VITE_EXPRESS_API_URL` defaults to `http://localhost:5000`
-- `VITE_FAST_API_URL` defaults to `http://localhost:8000`
+```env
+VITE_EXPRESS_API_URL=http://localhost:5000
+VITE_FAST_API_URL=http://localhost:8000
+```
 
-### 3. FastAPI service
+---
 
-The current FastAPI app lives in `fastapi/Scripts/main.py`. Start it with Uvicorn from that folder:
+### 3️⃣ FastAPI Service
 
 ```bash
 cd fastapi/Scripts
+pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
 
-Install Python dependencies from the matching requirements file in the same environment before starting the server.
+---
 
-## Data requirements
+## 📡 API Reference
 
-The lawyer search feature expects a MySQL database with a `Lawyer` table containing fields used by the UI and API, including:
+### Express Backend
 
-- `lawyer_id`
-- `first_name`
-- `last_name`
-- `specialization`
-- `city`
-- `state`
-- `experience_years`
-- `rating`
-- `hourly_rate`
-- `bio`
-- `languages`
-- `phone`
-- `email`
-- `website_url`
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/chat` | Send a legal question; returns a markdown response via Cohere |
+| `POST` | `/simplifier` | Send legal text; returns a structured JSON summary (key clauses, plain-English) |
+| `POST` | `/translator` | Translate a summary JSON while preserving structure |
+| `GET` | `/lawyer/lawyers` | Search lawyers by specialization, city, and language |
+| `GET` | `/lawyer/:id` | Get a single lawyer record by ID |
 
-## Notes
+### FastAPI Service
 
-- Keep API keys and database credentials in local `.env` files.
-- The AI responses are intended to help users understand legal information, not replace a licensed attorney.
-- Uploaded documents are indexed locally into FAISS for faster retrieval over future queries.
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/upload` | Upload a PDF → extract → chunk → embed → store in FAISS |
+| `POST` | `/query` | Ask a question; retrieves relevant chunks and returns a grounded answer |
 
-## Suggested next steps
+---
 
-- Add a sample `.env.example` file for each service.
-- Add a short deployment section for the frontend, backend, and FastAPI service.
-- Add screenshots for each user-facing page.
+## 🗄️ Database Schema
+
+The lawyer search feature requires a MySQL `Lawyer` table with the following fields:
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `lawyer_id` | INT | Primary key |
+| `first_name` | VARCHAR | — |
+| `last_name` | VARCHAR | — |
+| `specialization` | VARCHAR | e.g. Criminal, Family, Corporate |
+| `city` | VARCHAR | — |
+| `state` | VARCHAR | — |
+| `experience_years` | INT | — |
+| `rating` | DECIMAL | 0.0 – 5.0 |
+| `hourly_rate` | DECIMAL | In local currency |
+| `bio` | TEXT | Short profile description |
+| `languages` | VARCHAR | Comma-separated |
+| `phone` | VARCHAR | — |
+| `email` | VARCHAR | — |
+| `website_url` | VARCHAR | Optional |
+
+---
+
+
+
+Suggested screenshots to capture:
+
+- [ ] `chat.png` — Know Your Rights chat interface
+- [ ] `simplify.png` — Document Simplifier with a sample PDF loaded
+- [ ] `templates.png` — Template editor with live PDF preview
+- [ ] `lawyers.png` — Lawyer search results with filters applied
+- [ ] `home.png` — Landing page / home screen
+
+---
+
+## 🗺️ Roadmap
+
+- [ ] Add `.env.example` files for all three services
+- [ ] Deployment guide (Vercel · Railway · Render)
+- [ ] Add screenshots for all pages
+- [ ] User authentication and saved document history
+- [ ] Support for more document types (DOCX, images via OCR)
+- [ ] Multi-language UI (not just translated output)
+- [ ] Lawyer profile pages with booking/contact flow
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please open an issue first to discuss what you'd like to change.
+
+1. Fork the repo
+2. Create your branch: `git checkout -b feature/your-feature`
+3. Commit your changes: `git commit -m 'Add some feature'`
+4. Push to the branch: `git push origin feature/your-feature`
+5. Open a Pull Request
+
+---
+
+<div align="center">
+
+Built with ❤️ to make legal help accessible to everyone.
+
+</div>
