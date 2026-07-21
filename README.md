@@ -41,7 +41,7 @@ LegalEase is a full-stack AI-powered legal assistant that bridges the gap betwee
 Ask legal questions in a natural chat interface powered by Cohere AI. Get clear, markdown-formatted guidance on any legal topic.
 
 <!-- Add a screenshot: frontend/screenshots/chat.png -->
-![Chat Interface](frontend\screenshots\chat.png)
+![Chat Interface](frontend/screenshots/chat.png)
 
 </td>
 <td width="50%">
@@ -228,28 +228,7 @@ uvicorn main:app --reload --port 8000
 
 ---
 
-## 🗄️ Database Schema
 
-The lawyer search feature requires a MySQL `Lawyer` table with the following fields:
-
-| Field | Type | Notes |
-|-------|------|-------|
-| `lawyer_id` | INT | Primary key |
-| `first_name` | VARCHAR | — |
-| `last_name` | VARCHAR | — |
-| `specialization` | VARCHAR | e.g. Criminal, Family, Corporate |
-| `city` | VARCHAR | — |
-| `state` | VARCHAR | — |
-| `experience_years` | INT | — |
-| `rating` | DECIMAL | 0.0 – 5.0 |
-| `hourly_rate` | DECIMAL | In local currency |
-| `bio` | TEXT | Short profile description |
-| `languages` | VARCHAR | Comma-separated |
-| `phone` | VARCHAR | — |
-| `email` | VARCHAR | — |
-| `website_url` | VARCHAR | Optional |
-
----
 
 
 
@@ -275,7 +254,7 @@ Suggested screenshots to capture:
 
 ---
 
-## 🤝 Contributing
+## 🤝 Contribute
 
 Contributions are welcome! Please open an issue first to discuss what you'd like to change.
 
