@@ -29,7 +29,7 @@ LegalEase is a full-stack AI-powered legal assistant that bridges the gap betwee
 
 ---
 
-![LegalEase Banner](frontend/screenshots/home.png)
+![LegalEase Banner](frontend\screenshots\home.png)
 
 ## ✨ Features
 
@@ -41,7 +41,7 @@ LegalEase is a full-stack AI-powered legal assistant that bridges the gap betwee
 Ask legal questions in a natural chat interface powered by Cohere AI. Get clear, markdown-formatted guidance on any legal topic.
 
 <!-- Add a screenshot: frontend/screenshots/chat.png -->
-![Chat Interface](frontend/screenshots/chat.png)
+![Chat Interface](frontend\screenshots\chat.png)
 
 </td>
 <td width="50%">
@@ -50,7 +50,7 @@ Ask legal questions in a natural chat interface powered by Cohere AI. Get clear,
 Upload a PDF or image of any legal document. LegalEase extracts, summarizes, and translates it into plain English — with key clauses highlighted.
 
 <!-- Add a screenshot: frontend/screenshots/simplify.png -->
-![Doc Simplifier](frontend/screenshots/simplify.png)
+![Doc Simplifier](frontend\screenshots\simplify.png)
 
 </td>
 </tr>
@@ -61,7 +61,7 @@ Upload a PDF or image of any legal document. LegalEase extracts, summarizes, and
 Fill out form-based legal templates and see a live PDF preview update in real time. Export when ready.
 
 <!-- Add a screenshot: frontend/screenshots/templates.png -->
-![Templates](frontend/screenshots/template.png)
+![Templates](frontend\screenshots\template.png)
 
 </td>
 <td width="50%">
@@ -70,7 +70,7 @@ Fill out form-based legal templates and see a live PDF preview update in real ti
 Search a curated lawyer directory filtered by specialization, city, and language spoken.
 
 <!-- Add a screenshot: frontend/screenshots/lawyers.png -->
-![Find Lawyers](frontend/screenshots/lawyer.png)
+![Find Lawyers](frontend\screenshots\lawyer.png)
 
 </td>
 </tr>
@@ -80,38 +80,37 @@ Search a curated lawyer directory filtered by specialization, city, and language
 
 ## 🏗️ Architecture
 
-LegalEase is split into three independent services:
+LegalEase combines a modern frontend with two intelligent backend services for legal assistance, document understanding, and lawyer discovery.
 
+```mermaid
+flowchart LR
+    U["👤 User"] --> F["⚛️ React Frontend<br/>Vite"]
+    F --> B["🛠️ Express Backend<br/>Chat • Simplify • Translator • Lawyer"]
+    F --> A["🧠 FastAPI Service<br/>Upload • Query • RAG"]
+    B --> AI["🤖 Cohere / NVIDIA AI"]
+    A --> IDX["🔍 FAISS Vector Index"]
+    B --> DB["🗄️ MySQL Database<br/>Lawyer Directory"]
+    A --> AI
+    DB --> B
+
+    classDef user fill:#f5f3ff,stroke:#7c3aed,stroke-width:2px,color:#111827;
+    classDef frontend fill:#e0f2fe,stroke:#0369a1,stroke-width:2px,color:#0f172a;
+    classDef backend fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#052e16;
+    classDef ai fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#451a03;
+    classDef data fill:#fce7f3,stroke:#db2777,stroke-width:2px,color:#831843;
+
+    class U user;
+    class F frontend;
+    class B,A backend;
+    class AI,IDX ai;
+    class DB data;
 ```
-
-┌─────────────────────────────────────────────────────────────┐
-│                        Browser                              │
-│                    React Frontend (Vite)                    │
-│         Chat · Simplify · Templates · Find Lawyers          │
-└──────────────┬──────────────────────┬───────────────────────┘
-               │                      │
-               ▼                      ▼
-┌──────────────────────┐  ┌──────────────────────────────────┐
-│   Express Backend    │  │         FastAPI Service          │
-│  /chat  /simplifier  │  │  /upload  →  FAISS Index         │
-│  /translator /lawyer │  │  /query   →  RAG + Cohere        │
-└──────────┬───────────┘  └──────────────────────────────────┘
-           │
-           ▼
-┌──────────────────────┐
-│   MySQL Database     │
-│   Lawyer Directory   |
-|   API calls          |
-└──────────────────────┘
-
-```
-
 
 **Request flow:**
-1. User opens the React app and picks a tool.
-2. Frontend sends a request to the Express backend or FastAPI service.
-3. The backend calls Cohere / NVIDIA AI models and returns structured output.
-4. The frontend renders the response — markdown, PDF preview, or a lawyer card.
+1. A user interacts with the React app and selects a legal tool.
+2. The frontend sends the request to the Express backend or FastAPI service.
+3. The backend uses AI models and vector search to generate grounded, structured results.
+4. The frontend renders the final response as chat text, a simplified document view, or a lawyer card.
 
 ---
 
