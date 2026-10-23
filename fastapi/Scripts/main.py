@@ -33,12 +33,23 @@ MODEL_NAME = "embed-english-v3.0"
 VECTOR_SIZE = 1024
 
 INDEX_PATH = "vector_index.faiss"
+CHUNKS_PATH = "chunks.json"
+
 if os.path.exists(INDEX_PATH):
     index = faiss.read_index(INDEX_PATH)
 else:
     index = faiss.IndexFlatL2(VECTOR_SIZE)
 
-CHUNKS = []
+if os.path.exists(CHUNKS_PATH):
+    try:
+        with open(CHUNKS_PATH, "r", encoding="utf-8") as f:
+            CHUNKS = json.load(f)
+    except Exception as e:
+        print(f"Error loading {CHUNKS_PATH}: {e}")
+        CHUNKS = []
+else:
+    CHUNKS = []
+
 
 # ---------------- Utility Functions ----------------
 def extract_text_from_pdf(file_path):
@@ -70,6 +81,8 @@ async def upload_file(file: UploadFile):
     index.add(np.array(embeddings).astype("float32"))
     faiss.write_index(index, INDEX_PATH)
     CHUNKS.extend(chunks)
+    with open(CHUNKS_PATH, "w", encoding="utf-8") as f:
+        json.dump(CHUNKS, f)
 
     return {"status": "success", "chunks_stored": len(chunks)}
 

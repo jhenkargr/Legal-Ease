@@ -24,6 +24,15 @@ env/
 .venv/
 .pytest_cache/
 .mypy_cache/
+fastapi/Lib/
+fastapi/share/
+fastapi/pyvenv.cfg
+fastapi/Scripts/*.exe
+fastapi/Scripts/*.bat
+fastapi/Scripts/*.ps1
+fastapi/Scripts/activate*
+fastapi/Scripts/deactivate*
+fastapi1/
 
 # ── Environment & Secrets ─────────────────────────
 .env

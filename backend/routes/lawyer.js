@@ -10,21 +10,25 @@ dotenv.config();
 router.use(cors());
 router.use(express.json());
 
-// ✅ MySQL Connection
-const db = mysql.createConnection({
+// ✅ MySQL Connection Pool (prevents idle timeout disconnects)
+const db = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  port: process.env.DB_PORT
+  port: process.env.DB_PORT || 3306,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
-// ✅ Check DB connection
-db.connect((err) => {
+// ✅ Test DB connection from pool
+db.getConnection((err, connection) => {
   if (err) {
     console.error("❌ Database connection failed:", err);
   } else {
-    console.log("✅ Connected to MySQL Database");
+    console.log("✅ Connected to MySQL Database Pool");
+    connection.release();
   }
 });
 

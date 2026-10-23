@@ -8,6 +8,46 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "Text is required" });
     }
 
+    // 1️⃣ Primary: Cohere v2
+    if (process.env.COHERE_API_KEY) {
+      try {
+        const cohereResponse = await fetch("https://api.cohere.com/v2/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.COHERE_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: process.env.COHERE_MODEL || "command-r-08-2024",
+            messages: [
+              {
+                role: "system",
+                content:
+                  "You are a professional legal translation assistant. Always output ONLY raw valid JSON conforming to the requested schema. Never output markdown code fences, notes, or commentary.",
+              },
+              { role: "user", content: text },
+            ],
+            response_format: { type: "json_object" },
+            temperature: 0.1,
+          }),
+        });
+
+        if (cohereResponse.ok) {
+          const cohereData = await cohereResponse.json();
+          let rawReply = cohereData?.message?.content?.[0]?.text;
+          if (rawReply) {
+            rawReply = rawReply.replace(/```json/gi, "").replace(/```/g, "").trim();
+            const parsed = JSON.parse(rawReply);
+            return res.json(parsed);
+          }
+        }
+      } catch (coErr) {
+        console.warn("Cohere translator error, attempting NVIDIA fallback:", coErr.message);
+      }
+    }
+
+    // 2️⃣ Fallback: NVIDIA NIM
+    const nvidiaModel = process.env.NVIDIA_MODEL || "meta/llama-3.2-11b-vision-instruct";
     const apiResponse = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -15,22 +55,16 @@ router.post("/", async (req, res) => {
         "Authorization": `Bearer ${process.env.NVIDIA_API_KEY}`,
       },
       body: JSON.stringify({
-        model: process.env.NVIDIA_MODEL || "meta/llama-3.1-8b-instruct",
+        model: nvidiaModel,
         messages: [
           {
             role: "system",
-            content: `
-You are a translation assistant.
-Always return ONLY valid JSON with proper brackets and quotes.
-Never include markdown, explanations, or partial text.
-If the translation is too long to fit, summarize non-critical clauses
-BUT always return syntactically valid JSON (closed arrays and braces).
-            `,
+            content: "You are a translation assistant. Always return ONLY valid JSON matching the schema. Never include markdown fences or explanations.",
           },
           { role: "user", content: text },
         ],
         temperature: 0,
-        max_tokens: 8000, // ⬆️ Much higher limit
+        max_tokens: 3000,
       }),
     });
 

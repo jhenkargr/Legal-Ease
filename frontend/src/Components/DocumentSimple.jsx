@@ -198,12 +198,17 @@ const DocumentSimple = () => {
         body: JSON.stringify({ text: `${data1}` }),
       });
 
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || `Server returned error (${response.status})`);
+      }
+
       const data = await response.json();
       console.log("✅ Response from backend:", data);
-      console.log("✅ Extracted Text:", extractedText);
       setResults(data);
     } catch (error) {
       console.error("❌ Error fetching from backend:", error);
+      setResults({ error: error.message || "Failed to simplify document. Please try again." });
     } finally {
       setIsLoading(false);
     }
@@ -283,35 +288,38 @@ Remember: Return ONLY valid JSON. Translate the "summary", "title", and "detail"
         body: JSON.stringify({ text: translationPrompt }),
       });
 
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || `Translation failed (${response.status})`);
+      }
+
       const data = await response.json();
       console.log("✅ Translation response:", data);
 
       // Check if response already has the correct structure
       if (data.summary && data.keyClauses) {
         setUpdated(data);
-        setIsLoading(false);
       } else {
         // Try to extract JSON from markdown code blocks if present
         let content = typeof data === "string" ? data : JSON.stringify(data);
-
-        // Remove markdown code blocks if present
-        content = content.replace(/``````\n?/g, "");
+        content = content.replace(/```json/g, "").replace(/```/g, "").trim();
 
         try {
           const parsed = JSON.parse(content);
           setUpdated(parsed);
         } catch (parseError) {
           console.error("Failed to parse translation:", parseError);
-          // Fallback: keep original structure with translated summary only
           setUpdated({
-            summary: content,
+            summary: typeof data === "string" ? data : data.summary || "Translation completed",
             keyClauses: results.keyClauses,
           });
         }
       }
     } catch (error) {
-      console.error("❌ Error fetching from backend:", error);
+      console.error("❌ Error fetching translation from backend:", error);
       setSelected(false);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -322,11 +330,32 @@ Remember: Return ONLY valid JSON. Translate the "summary", "title", and "detail"
       try {
         const typedarray = new Uint8Array(reader.result);
         const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
-        let finalText = "";
+        let digitalText = "";
 
+        // Fast path: attempt digital text extraction first
         for (let i = 1; i <= pdf.numPages; i++) {
           const page = await pdf.getPage(i);
-          const viewport = page.getViewport({ scale: 2.0 });
+          const textContent = await page.getTextContent();
+          const pageStr = textContent.items.map((item) => item.str).join(" ");
+          if (pageStr.trim()) {
+            digitalText += `${pageStr}\n`;
+          }
+        }
+
+        // If digital text extraction succeeded (> 30 characters), use it immediately
+        if (digitalText.trim().length > 30) {
+          const singleLine = digitalText.replace(/\s*\n\s*/g, " ").trim();
+          setExtractedText(singleLine);
+          await sendToBackend(singleLine);
+          return;
+        }
+
+        // Fallback for scanned PDF: perform OCR using English
+        console.log("No digital text layer found, falling back to OCR...");
+        let ocrText = "";
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const viewport = page.getViewport({ scale: 1.5 });
           const canvas = document.createElement("canvas");
           const context = canvas.getContext("2d");
           canvas.width = viewport.width;
@@ -335,19 +364,20 @@ Remember: Return ONLY valid JSON. Translate the "summary", "title", and "detail"
 
           const {
             data: { text },
-          } = await Tesseract.recognize(canvas.toDataURL("image/png"), "eng+hin+kan", {
+          } = await Tesseract.recognize(canvas.toDataURL("image/png"), "eng", {
             logger: (m) => console.log(m),
           });
 
-          finalText += `${text}\n`;
+          ocrText += `${text}\n`;
         }
 
-        const singleLine = finalText.replace(/\s*\n\s*/g, " ");
+        const singleLine = ocrText.replace(/\s*\n\s*/g, " ").trim();
         setExtractedText(singleLine);
         await sendToBackend(singleLine);
       } catch (err) {
-        console.error("PDF OCR error:", err);
+        console.error("PDF extraction error:", err);
         setExtractedText("❌ Failed to extract text from PDF.");
+        setResults({ error: "Failed to extract text from PDF: " + (err.message || err) });
         setIsLoading(false);
       }
     };
@@ -361,15 +391,16 @@ Remember: Return ONLY valid JSON. Translate the "summary", "title", and "detail"
       try {
         const {
           data: { text },
-        } = await Tesseract.recognize(reader.result, "eng+hin+kan", {
+        } = await Tesseract.recognize(reader.result, "eng", {
           logger: (m) => console.log(m),
         });
-        const singleline = text.replace(/\s*\n\s*/g, " ");
+        const singleline = text.replace(/\s*\n\s*/g, " ").trim();
         console.log(singleline);
         setExtractedText(singleline);
         await sendToBackend(singleline);
       } catch (err) {
         console.error("Image OCR error:", err);
+        setResults({ error: "Failed to read text from image. Please ensure the image is clear and readable." });
         setIsLoading(false);
       }
     };
@@ -505,28 +536,39 @@ Remember: Return ONLY valid JSON. Translate the "summary", "title", and "detail"
           {isLoading && (
             <div className="text-center text-indigo-600 py-10">
               <Loader2 className="w-10 h-10 mx-auto animate-spin mb-3" />
-              Extracting text using OCR...
+              Processing document with AI...
+            </div>
+          )}
+
+          {/* Results Error */}
+          {results?.error && (
+            <div className="p-5 bg-red-50 border border-red-300 rounded-xl text-red-800 flex items-start gap-3 shadow-sm">
+              <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="font-semibold text-lg">Unable to simplify document</h4>
+                <p className="text-sm mt-1 text-red-700">{results.error}</p>
+              </div>
             </div>
           )}
 
           {/* Results */}
-          {results && (
+          {results && !results.error && results.summary && (
             <div className="space-y-6">
               <div className="p-6 bg-indigo-50 border border-indigo-200 rounded-lg shadow-inner">
                 <h3 className="text-2xl font-bold text-indigo-700 mb-3">Simplified Summary</h3>
                 <div className="text-gray-700 text-lg">
-                  <ReactMarkdown>{selected && !isLoading ? updated.summary : results.summary}</ReactMarkdown>
+                  <ReactMarkdown>{selected && !isLoading ? updated?.summary : results.summary}</ReactMarkdown>
                 </div>
               </div>
 
               <div>
                 <h3 className="text-2xl font-bold text-gray-800 mb-4">Key Clauses & Important Details</h3>
                 <div className="space-y-4">
-                  {(selected && !isLoading ? updated.keyClauses : results.keyClauses)?.map((clause, index) => (
+                  {(selected && !isLoading ? updated?.keyClauses : results.keyClauses)?.map((clause, index) => (
                     <div
                       key={index}
                       className={`p-4 rounded-lg shadow-md transition duration-300 ${
-                        clause.isAlert ? "bg-red-50 border-l-4 border-red-500 hover:shadow-lg" : "bg-white border border-gray-200 hover:bg-gray-50"
+                        clause.alert ? "bg-red-50 border-l-4 border-red-500 hover:shadow-lg" : "bg-white border border-gray-200 hover:bg-gray-50"
                       }`}
                     >
                       <div className="flex justify-between items-start mb-1">
@@ -547,7 +589,7 @@ Remember: Return ONLY valid JSON. Translate the "summary", "title", and "detail"
           )}
 
           {/* Translation & Query Section */}
-          {results && (
+          {results && !results.error && results.summary && (
             <div className="flex flex-row md:flex-col items-center justify-between gap-4 mt-8 bg-white p-5 rounded-xl shadow-md border border-gray-200">
               {/* Translation Buttons */}
               <div className="flex items-center gap-3">
