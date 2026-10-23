@@ -534,7 +534,6 @@ export default function App() {
         body { font-family: 'Inter', sans-serif; }
       `}</style>
 
-      <Navbar />
       <main>
         <KnowYourRights />
       </main>

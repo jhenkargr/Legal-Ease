@@ -705,7 +705,6 @@ Remember: Return ONLY valid JSON. Translate the "summary", "title", and "detail"
 export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
-      <Navbar />
       <main>
         <DocumentSimple />
       </main>
