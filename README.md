@@ -29,7 +29,7 @@ LegalEase is a full-stack AI-powered legal assistant that bridges the gap betwee
 
 ---
 
-![LegalEase Banner](frontend\screenshots\home.png)
+![LegalEase Banner](frontend/screenshots/home.png)
 
 ## ✨ Features
 
@@ -41,7 +41,7 @@ LegalEase is a full-stack AI-powered legal assistant that bridges the gap betwee
 Ask legal questions in a natural chat interface powered by Cohere AI. Get clear, markdown-formatted guidance on any legal topic.
 
 <!-- Add a screenshot: frontend/screenshots/chat.png -->
-![Chat Interface](frontend\screenshots\chat.png)
+![Chat Interface](frontend/screenshots/chat.png)
 
 </td>
 <td width="50%">
@@ -50,7 +50,7 @@ Ask legal questions in a natural chat interface powered by Cohere AI. Get clear,
 Upload a PDF or image of any legal document. LegalEase extracts, summarizes, and translates it into plain English — with key clauses highlighted.
 
 <!-- Add a screenshot: frontend/screenshots/simplify.png -->
-![Doc Simplifier](frontend\screenshots\simplify.png)
+![Doc Simplifier](frontend/screenshots/simplify.png)
 
 </td>
 </tr>
@@ -61,7 +61,7 @@ Upload a PDF or image of any legal document. LegalEase extracts, summarizes, and
 Fill out form-based legal templates and see a live PDF preview update in real time. Export when ready.
 
 <!-- Add a screenshot: frontend/screenshots/templates.png -->
-![Templates](frontend\screenshots\template.png)
+![Templates](frontend/screenshots/template.png)
 
 </td>
 <td width="50%">
@@ -70,7 +70,7 @@ Fill out form-based legal templates and see a live PDF preview update in real ti
 Search a curated lawyer directory filtered by specialization, city, and language spoken.
 
 <!-- Add a screenshot: frontend/screenshots/lawyers.png -->
-![Find Lawyers](frontend\screenshots\lawyer.png)
+![Find Lawyers](frontend/screenshots/lawyer.png)
 
 </td>
 </tr>
@@ -228,28 +228,7 @@ uvicorn main:app --reload --port 8000
 
 ---
 
-## 🗄️ Database Schema
 
-The lawyer search feature requires a MySQL `Lawyer` table with the following fields:
-
-| Field | Type | Notes |
-|-------|------|-------|
-| `lawyer_id` | INT | Primary key |
-| `first_name` | VARCHAR | — |
-| `last_name` | VARCHAR | — |
-| `specialization` | VARCHAR | e.g. Criminal, Family, Corporate |
-| `city` | VARCHAR | — |
-| `state` | VARCHAR | — |
-| `experience_years` | INT | — |
-| `rating` | DECIMAL | 0.0 – 5.0 |
-| `hourly_rate` | DECIMAL | In local currency |
-| `bio` | TEXT | Short profile description |
-| `languages` | VARCHAR | Comma-separated |
-| `phone` | VARCHAR | — |
-| `email` | VARCHAR | — |
-| `website_url` | VARCHAR | Optional |
-
----
 
 
 
@@ -275,7 +254,7 @@ Suggested screenshots to capture:
 
 ---
 
-## 🤝 Contributing
+## 🤝 Contribute
 
 Contributions are welcome! Please open an issue first to discuss what you'd like to change.
 
