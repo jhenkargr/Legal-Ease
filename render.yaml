@@ -4,7 +4,7 @@ services:
   # ========================================================
   - type: web
     name: legalease-fastapi-rag
-    env: python
+    runtime: python
     region: oregon
     plan: free
     rootDir: fastapi
@@ -33,7 +33,7 @@ services:
   # ========================================================
   - type: web
     name: legalease-backend
-    env: node
+    runtime: node
     region: oregon
     plan: free
     rootDir: backend
@@ -45,7 +45,10 @@ services:
       - key: CLIENT_URL
         value: "*"
       - key: FAST_API_URL
-        sync: false
+        fromService:
+          type: web
+          name: legalease-fastapi-rag
+          envVarKey: RENDER_EXTERNAL_URL
       - key: COHERE_API_KEY
         sync: false
       - key: COHERE_MODEL
@@ -66,13 +69,11 @@ services:
         value: "3306"
 
   # ========================================================
-  # 3. React Vite Frontend (Static Site)
+  # 3. React Vite Frontend (Static Site - Global CDN)
   # ========================================================
   - type: web
     name: legalease-frontend
-    env: static
-    region: oregon
-    plan: free
+    runtime: static
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
@@ -82,6 +83,12 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_EXPRESS_API_URL
-        sync: false
+        fromService:
+          type: web
+          name: legalease-backend
+          envVarKey: RENDER_EXTERNAL_URL
       - key: VITE_FAST_API_URL
-        sync: false
+        fromService:
+          type: web
+          name: legalease-fastapi-rag
+          envVarKey: RENDER_EXTERNAL_URL
