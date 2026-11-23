@@ -8,6 +8,30 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "Text is required for simplification." });
     }
 
+    // 1️⃣ Primary Engine: FastAPI LangChain Simplifier & RAG Auto-Indexer
+    const fastApiUrl = process.env.FAST_API_URL || "http://localhost:8000";
+    try {
+      const fastApiResponse = await fetch(`${fastApiUrl}/simplify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, auto_index: true }),
+        signal: AbortSignal.timeout ? AbortSignal.timeout(30000) : undefined,
+      });
+
+      if (fastApiResponse.ok) {
+        const fastApiData = await fastApiResponse.json();
+        if (fastApiData.summary && Array.isArray(fastApiData.keyClauses)) {
+          console.log("✅ Document simplified & indexed via FastAPI LangChain Engine");
+          return res.json(fastApiData);
+        }
+      }
+    } catch (fastApiErr) {
+      console.warn(
+        "⚠️ FastAPI LangChain simplifier unavailable, falling back to direct Cohere:",
+        fastApiErr.message
+      );
+    }
+
     const prompt = `
 Provide a clear, comprehensive summary of the following legal document in plain English.
 Then extract key clauses and return an array of clause objects with:

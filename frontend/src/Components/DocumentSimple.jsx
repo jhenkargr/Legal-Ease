@@ -189,18 +189,32 @@ const DocumentSimple = () => {
     }
   };
 
-  // Send text to backend
+  // Send text to backend (tries Express first, with seamless fallback to FastAPI)
   const sendToBackend = async (data1) => {
     try {
-      const response = await fetch(`${EXPRESS_API_URL}/simplifier`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: `${data1}` }),
-      });
+      let response;
+      try {
+        response = await fetch(`${EXPRESS_API_URL}/simplifier`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: `${data1}` }),
+        });
+      } catch (expressErr) {
+        console.warn("Express server unreachable, attempting FastAPI direct connection:", expressErr);
+      }
+
+      // If Express failed or was offline, call FastAPI /simplify directly
+      if (!response || !response.ok) {
+        response = await fetch(`${FAST_API_URL}/simplify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: `${data1}`, auto_index: true }),
+        });
+      }
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || `Server returned error (${response.status})`);
+        throw new Error(errData.detail || errData.error || `Server returned error (${response.status})`);
       }
 
       const data = await response.json();
@@ -220,16 +234,32 @@ const DocumentSimple = () => {
     setResults1(null);
 
     try {
-      const response = await fetch(`${FAST_API_URL}/query`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [`Document Content: ${extractedText}`, `User asked: ${query}`],
-        }),
-      });
+      let response;
+      try {
+        response = await fetch(`${FAST_API_URL}/query`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: [`Document Content: ${extractedText}`, `User asked: ${query}`],
+          }),
+        });
+      } catch (fastApiErr) {
+        console.warn("FastAPI query unreachable, falling back to Express:", fastApiErr);
+      }
+
+      if (!response || !response.ok) {
+        // Fallback to Express /chat
+        response = await fetch(`${EXPRESS_API_URL}/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            text: `Document Content: ${extractedText}\nUser asked: ${query}`,
+          }),
+        });
+      }
 
       const data = await response.json();
-      console.log("✅ Gemini response:", data);
+      console.log("✅ AI response:", data);
       setResults1(data);
     } catch (error) {
       console.error("❌ Error fetching from backend:", error);

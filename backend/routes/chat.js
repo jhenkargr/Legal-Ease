@@ -41,6 +41,40 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "No valid user messages after processing." });
     }
 
+    // 1️⃣ Try querying the FastAPI LangGraph + LangChain RAG pipeline
+    const fastApiUrl = process.env.FAST_API_URL || "http://localhost:8000";
+    try {
+      const ragMessages = messages.map(
+        (m) => `${m.role === "user" ? "User asked:" : "Assistant:"} ${m.content}`
+      );
+
+      const ragResponse = await fetch(`${fastApiUrl}/query`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: ragMessages }),
+        signal: AbortSignal.timeout ? AbortSignal.timeout(20000) : undefined,
+      });
+
+      if (ragResponse.ok) {
+        const ragData = await ragResponse.json();
+        if (ragData.reply && !ragData.error) {
+          console.log("✅ Served response from FastAPI LangGraph RAG Engine");
+          return res.json({
+            reply: ragData.reply,
+            context_used: ragData.context_used,
+            citations: ragData.citations,
+            source: "langgraph_rag",
+          });
+        }
+      }
+    } catch (ragErr) {
+      console.warn(
+        "⚠️ FastAPI LangGraph RAG unavailable, falling back to direct Cohere chat:",
+        ragErr.message
+      );
+    }
+
+    // 2️⃣ Fallback: Direct Cohere Chat
     const model = process.env.COHERE_MODEL || "command-r-08-2024";
     const apiKey = process.env.COHERE_API_KEY;
     const apiUrl = "https://api.cohere.com/v2/chat";
