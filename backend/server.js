@@ -1,30 +1,24 @@
 // server.js
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import fetch from "node-fetch"; // Optional for Node 18+, can remove if global fetch is available
-import path from "path";
-import { fileURLToPath } from "url";
+const express = require("express");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const path = require("path");
 
-// ✅ Needed for ES module path resolution
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// ✅ Load environment variables first
+dotenv.config();
 
 // ✅ Import Routers
-import chatRouter from "./routes/chat.js";
-import lawyerRouter from "./routes/lawyer.js";
-import simplifierRouter from "./routes/simplifier.js";
-import translatorRouter from "./routes/translator.js";
-
-// ✅ Load environment variables
-dotenv.config();
+const chatRouter = require("./routes/chat.js");
+const lawyerRouter = require("./routes/lawyer.js");
+const simplifierRouter = require("./routes/simplifier.js");
+const translatorRouter = require("./routes/translator.js");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ✅ Middleware
 app.use(cors({
-  origin: process.env.CLIENT_URL || "*", // Set your frontend URL in .env for security
+  origin: process.env.CLIENT_URL || "*",
   methods: ["GET", "POST"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
@@ -41,7 +35,7 @@ app.get("/", (req, res) => {
   res.send("🧠 Legal AI Backend Server is running smoothly!");
 });
 
-// ✅ Global error handler (optional but recommended)
+// ✅ Global error handler
 app.use((err, req, res, next) => {
   console.error("❌ Global Error Handler:", err);
   res.status(500).json({
@@ -50,7 +44,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ✅ Start Server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+// ✅ Start Server binding to 0.0.0.0 for Render compatibility
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
